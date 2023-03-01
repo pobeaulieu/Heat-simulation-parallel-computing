@@ -159,6 +159,12 @@ long sequential(int rows, int cols, int iters, double td, double h, int sleep)
 long parallel(int rows, int cols, int iters, double td, double h, int sleep, int rank, double ** matrix, int procCount)
 {
     // Calculate the number of rows for each process.
+    // S'il n'est pas possible de distribuer les charges également entre les process, le root prend en chage l'excédent.
+    // Exemple: 13 lignes, 5 colonnes sur 3 process
+    // Rank 0 : 5 lignes
+    // Rank 1 : 4 lignes
+    // Rank 2 : 4 lignes
+    
     int rowsRoot = rows / procCount + rows % procCount;
     int rowsProc = rows / procCount;
 
