@@ -9,12 +9,19 @@
 #include "output/output.hpp"
 #include "solver/solver.hpp"
 
+using std::cout;
+using std::endl;
+using std::fixed;
+using std::flush;
+using std::setprecision;
+using std::setw;
+
 void usage();
 void command(int argc, char* argv[]);
 
 void initial(int rows, int cols);
 long sequential(int rows, int cols, int iters, double td, double h, int sleep);
-long parallel(int rows, int cols, int iters, double td, double h, int sleep, int rank, double ** matrix);
+long parallel(int rows, int cols, int iters, double td, double h, int sleep, int rank, double ** matrix, int procCount);
 
 using namespace std::chrono;
 
@@ -83,7 +90,7 @@ int main(int argc, char* argv[]) {
     double ** matrix = allocateMatrix(rows, cols);
     fillMatrix(rows, cols, matrix);
 
-    runtime_par = parallel(rows, cols, iters, td, h, sleep, rank, matrix);
+    runtime_par = parallel(rows, cols, iters, td, h, sleep, rank, matrix, procCount);
 
     if(0 == rank)
     {
@@ -149,17 +156,74 @@ long sequential(int rows, int cols, int iters, double td, double h, int sleep)
     return duration;
 }
 
-long parallel(int rows, int cols, int iters, double td, double h, int sleep, int rank, double ** matrix)
+long parallel(int rows, int cols, int iters, double td, double h, int sleep, int rank, double ** matrix, int procCount)
 {
-    time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
-    solvePar(rows, cols, iters, td, h, sleep, matrix);
-    time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
-    if (0 == rank)
+    // Calculate the number of rows for each process.
+    int rowsRoot = rows / procCount + rows % procCount;
+    int rowsProc = rows / procCount;
+
+    double * bufferReceive = new double[cols * rows];
+    double * bufferSend = new double[cols * rowsProc];
+
+    double ** result = allocateMatrix(rows, cols);
+
+    double ** matrixLoc;
+
+    time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
+
+    if (rank == 0){
+        // Pas besoin de faire une matrice tempo, le faire in place direct
+        //prendre rows root
+        solvePar(rowsRoot, cols, iters, td, h, sleep, matrix);   
+     
+      
+    }
+    else{
+        //Allocate a local matrix for each process
+        matrixLoc = allocateMatrix(rowsProc, cols);
+        
+        // Fill the local matrix
+        for (int i = 0; i < rowsProc; i++){
+            for (int j = 0; j < cols; j++) {
+                matrixLoc[i][j] = matrix[i + rowsRoot + (rank - 1) * rowsProc][j];
+            } 
+        }
+        
+        solvePar(rowsProc, cols, iters, td, h, sleep, matrixLoc);
+       
+        //Construire un buffer lineaire pour le gather
+        int k = 0;
+        for (int i = 0; i < rowsProc; i++){
+            for (int j = 0; j < cols; j++){
+                bufferSend[k] = matrixLoc[i][j];
+                k++;
+            }
+        }
+    }
+
+    time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now(); 
+
+    // Le root envoie des 0 à lui-meme. Seulement les valeurs des autres threads l'interesse. 
+    MPI_Gather(bufferSend, rowsProc * cols, MPI_DOUBLE, bufferReceive, rowsProc * cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);  
+  
+    if (rank == 0)
     {
-        cout << "-----  PARALLEL  -----" << endl << flush;
+        //Remplir la matrix avec les valeurs recues des autres threads
+        for(int i = rowsProc + 1; i < rows; i++) {
+            for(int j = 0; j < cols; j++) {
+                    matrix[i][j] = bufferReceive[j + cols * i - cols];
+
+            }
+        }
+
+        cout << "-----  PARALLEL  APRES GATHER... INITIAL FOR NOW -----" << endl << flush;
         printMatrix(rows, cols, matrix);
     }
 
+    
     return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
 }
+
+
+
