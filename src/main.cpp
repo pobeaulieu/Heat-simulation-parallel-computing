@@ -166,8 +166,6 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
     double * bufferReceive = new double[cols * rows];
     double * bufferSend = new double[cols * rowsProc];
 
-    double ** result = allocateMatrix(rows, cols);
-
     double ** matrixLoc;
 
     time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
@@ -189,7 +187,7 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
                 matrixLoc[i][j] = matrix[i + rowsRoot + (rank - 1) * rowsProc][j];
             } 
         }
-        
+
         solvePar(rowsProc, cols, iters, td, h, sleep, matrixLoc);
        
         //Construire un buffer lineaire pour le gather
