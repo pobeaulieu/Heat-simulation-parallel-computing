@@ -46,5 +46,10 @@ void solveSeq(int rows, int cols, int iterations, double td, double h, int sleep
 
 void solvePar(int rows, int cols, int iterations, double td, double h, int sleep, double ** matrix) 
 {
+    // receive top array from rank - 1 (if rank > 0)
+    // receive bottom array from rank + 1 (if rank < nbProc -1)
+    
+    // Send top array to rank - 1 (if rank > 0)
+    // Send bottom array to rank + 1 (if rank < nbProc -1)
     sleep_for(microseconds(sleep));
 }
