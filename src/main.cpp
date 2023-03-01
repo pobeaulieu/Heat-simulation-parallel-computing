@@ -158,7 +158,6 @@ long sequential(int rows, int cols, int iters, double td, double h, int sleep)
 
 long parallel(int rows, int cols, int iters, double td, double h, int sleep, int rank, double ** matrix, int procCount)
 {
-
     // Calculate the number of rows for each process.
     int rowsRoot = rows / procCount + rows % procCount;
     int rowsProc = rows / procCount;
@@ -211,7 +210,6 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
         for(int i = rowsProc + 1; i < rows; i++) {
             for(int j = 0; j < cols; j++) {
                     matrix[i][j] = bufferReceive[j + cols * i - cols];
-
             }
         }
 
