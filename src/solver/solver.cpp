@@ -62,21 +62,21 @@ void solvePar(int rows, int cols, int iterations, double td, double h, int sleep
 
         memcpy(linePrevBuffer, matrix[0], cols * sizeof(double));
         for(int i = 1; i < rows - 1; i++) {
-                        // receive top array from rank - 1 (if rank > 0)
-            if(rank > 0){
-                MPI_Recv(lineTopBuffer, cols, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);	
-            }
-            // receive bottom array from rank + 1 (if rank < nbProc -1)
-            if(rank < nbProc - 1){
-                MPI_Recv(lineBottomBuffer, cols, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);	
-            }
-        // Send top array to rank - 1 (if rank > 0)
-            if(rank > 0){
-                MPI_Send(lineTopBuffer, cols, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD);
-            }
-            // Send bottom array to rank + 1 (if rank < nbProc -1)
-            if(rank < nbProc - 1){
+            if(rank == 0){
                 MPI_Send(lineBottomBuffer, cols, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD);
+            }else{
+                // receive top array from rank - 1 (if rank > 0)
+                if(rank > 0)
+                    MPI_Recv(lineTopBuffer, cols, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);	
+                // receive bottom array from rank + 1 (if rank < nbProc -1)
+                if(rank < nbProc - 1)
+                    MPI_Recv(lineBottomBuffer, cols, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);	
+                // Send top array to rank - 1 (if rank > 0)
+                if(rank > 0)
+                    MPI_Send(lineTopBuffer, cols, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD);
+                // Send bottom array to rank + 1 (if rank < nbProc -1)
+                if(rank < nbProc - 1)
+                    MPI_Send(lineBottomBuffer, cols, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD);
             }
 
             memcpy(lineCurrBuffer, matrix[i], cols * sizeof(double));
