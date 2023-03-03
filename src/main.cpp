@@ -164,7 +164,7 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
     // Rank 0 : 5 lignes
     // Rank 1 : 4 lignes
     // Rank 2 : 4 lignes
-    
+
     int rowsRoot = rows / procCount + rows % procCount;
     int rowsProc = rows / procCount;
 
@@ -172,13 +172,15 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
     double * bufferSend = new double[cols * rowsProc];
 
     double ** matrixLoc;
-
     time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
 
+
+
     if (rank == 0){
-        // Pas besoin de faire une matrice tempo, le faire in place direct
-        //prendre rows root
-        solvePar(rowsRoot, cols, iters, td, h, sleep, matrix);   
+  
+        solvePar(rowsRoot, cols, iters, td, h, sleep, matrix, rank, procCount - 1);
+        time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now(); 
+
      
       
     }
@@ -193,7 +195,7 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
             } 
         }
 
-        solvePar(rowsProc, cols, iters, td, h, sleep, matrixLoc);
+        solvePar(rowsProc, cols, iters, td, h, sleep, matrixLoc, rank, procCount - 1);
        
         //Construire un buffer lineaire pour le gather
         int k = 0;
@@ -205,13 +207,15 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
         }
     }
 
-    time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now(); 
-
+   
     // Le root envoie des 0 à lui-meme. Seulement les valeurs des autres threads l'interesse. 
     MPI_Gather(bufferSend, rowsProc * cols, MPI_DOUBLE, bufferReceive, rowsProc * cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);  
-  
+    
+    time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now(); 
+
     if (rank == 0)
     {
+
         //Remplir la matrix avec les valeurs recues des autres threads
         for(int i = rowsProc + 1; i < rows; i++) {
             for(int j = 0; j < cols; j++) {
@@ -219,8 +223,10 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
             }
         }
 
-        cout << "-----  PARALLEL  APRES GATHER... INITIAL FOR NOW -----" << endl << flush;
+        cout << "-----  PARALLEL  -----" << endl << flush;
         printMatrix(rows, cols, matrix);
+
+
     }
 
     
