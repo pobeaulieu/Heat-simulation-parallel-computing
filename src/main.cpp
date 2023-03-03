@@ -178,7 +178,7 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
     if (rank == 0){
         // Pas besoin de faire une matrice tempo, le faire in place direct
         //prendre rows root
-        solvePar(rowsRoot, cols, iters, td, h, sleep, matrix);   
+        solvePar(rowsRoot, cols, iters, td, h, sleep, matrix, 0 , procCount);   
      
       
     }
@@ -193,7 +193,7 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
             } 
         }
 
-        solvePar(rowsProc, cols, iters, td, h, sleep, matrixLoc);
+        solvePar(rowsProc, cols, iters, td, h, sleep, matrixLoc, rank, procCount);
        
         //Construire un buffer lineaire pour le gather
         int k = 0;
