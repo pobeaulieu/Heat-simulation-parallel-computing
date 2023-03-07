@@ -167,6 +167,19 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
 
     time_point<high_resolution_clock> timepoint_s, timepoint_e;
 
+    bool toTransposeBack = false;
+
+    if (cols > rows){
+        matrix = transposeMatrix(matrix, rows, cols);
+        int temp = rows;
+        rows = cols;
+        cols = temp; 
+        toTransposeBack = true;
+    }
+    else{
+        int rowsCalc = rows; 
+    }
+
     int rowsRoot = rows / procCount + rows % procCount;
     int rowsProc = rows / procCount;
 
@@ -208,6 +221,13 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
         //Remplir la matrix avec les valeurs recues des autres threads
         for (int i = 0; i < rows - rowsRoot; i++){
             memcpy(matrix[rowsRoot + i], bufferReceive + cols * (rowsProc + i), cols * sizeof(double));
+        }
+
+        if (toTransposeBack){
+            matrix = transposeMatrix(matrix, rows, cols);
+            int temp = rows;
+            rows = cols;
+            cols = temp;  
         }
 
         cout << "-----  PARALLEL  -----" << endl << flush;

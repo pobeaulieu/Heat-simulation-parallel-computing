@@ -10,6 +10,20 @@ double ** allocateMatrix(int rows, int cols) {
     return matrix;
 }
 
+double ** transposeMatrix(double **matrix, int rows, int cols) {
+    // Allocate memory for the transposed matrix
+    double **transposed = allocateMatrix(cols, rows);
+
+    // Transpose the matrix
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            transposed[j][i] = matrix[i][j];
+        }
+    }
+
+    return transposed;
+}
+
 void deallocateMatrix(int rows, double ** matrix) {
     for(int i = 0; i < rows; i++) {
         delete(matrix[i]);

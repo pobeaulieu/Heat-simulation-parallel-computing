@@ -10,6 +10,11 @@ echo ">>>"
 
 echo ""
 echo "<<<"
+mpirun -np 3 ./lab3 5 13 300 0.01 1
+echo ">>>"
+
+echo ""
+echo "<<<"
 mpirun -np 3 ./lab3 13 5 300 0.01 1
 echo ">>>"
 
