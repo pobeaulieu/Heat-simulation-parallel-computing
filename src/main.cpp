@@ -176,9 +176,6 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
         cols = temp; 
         toTransposeBack = true;
     }
-    else{
-        int rowsCalc = rows; 
-    }
 
     int rowsRoot = rows / procCount + rows % procCount;
     int rowsProc = rows / procCount;
