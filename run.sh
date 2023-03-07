@@ -10,7 +10,7 @@ echo ">>>"
 
 echo ""
 echo "<<<"
-mpirun -np 2 ./lab3 5 9 300 0.01 1
+mpirun -np 3 ./lab3 13 5 300 0.01 1
 echo ">>>"
 
 make clean

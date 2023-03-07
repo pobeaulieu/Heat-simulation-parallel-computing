@@ -10,7 +10,7 @@
 
 echo "mpirun -np 64 ./lab3 1000 15 15 0.00025 0.1"
 echo "<<<"
-mpirun -np 64 ./lab3 64 15 15 0.00025 0.1
+mpirun -np 5 ./lab3 1000 15 15 0.00025 0.1
 echo ">>>"
 
 # echo "mpirun -np 35 ./lab3 10 1200 35 0.00025 0.1"

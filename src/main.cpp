@@ -165,6 +165,8 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
     // Rank 1 : 4 lignes
     // Rank 2 : 4 lignes
 
+    time_point<high_resolution_clock> timepoint_s, timepoint_e;
+
     int rowsRoot = rows / procCount + rows % procCount;
     int rowsProc = rows / procCount;
 
@@ -172,17 +174,12 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
     double * bufferSend = new double[cols * rowsProc];
 
     double ** matrixLoc;
-    time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
-
-
+    
+    timepoint_s = high_resolution_clock::now();
 
     if (rank == 0){
-  
-        solvePar(rowsRoot, cols, iters, td, h, sleep, matrix, rank, procCount - 1);
-        time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now(); 
 
-     
-      
+        solvePar(rowsRoot, cols, iters, td, h, sleep, matrix, rank, procCount - 1);
     }
     else{
         //Allocate a local matrix for each process
@@ -190,47 +187,43 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
         
         // Fill the local matrix
         for (int i = 0; i < rowsProc; i++){
-            for (int j = 0; j < cols; j++) {
-                matrixLoc[i][j] = matrix[i + rowsRoot + (rank - 1) * rowsProc][j];
-            } 
+             memcpy(matrixLoc[i], matrix[i + rowsRoot + (rank - 1) * rowsProc], cols * sizeof(double));
         }
-
         solvePar(rowsProc, cols, iters, td, h, sleep, matrixLoc, rank, procCount - 1);
        
-        //Construire un buffer lineaire pour le gather
-        int k = 0;
+        //Construire un buffer 1D pour le gather
+        //int k = 0;
         for (int i = 0; i < rowsProc; i++){
-            for (int j = 0; j < cols; j++){
-                bufferSend[k] = matrixLoc[i][j];
-                k++;
-            }
+            memcpy(bufferSend + i * cols, matrixLoc[i], cols * sizeof(double));
         }
     }
 
    
     // Le root envoie des 0 à lui-meme. Seulement les valeurs des autres threads l'interesse. 
     MPI_Gather(bufferSend, rowsProc * cols, MPI_DOUBLE, bufferReceive, rowsProc * cols, MPI_DOUBLE, 0, MPI_COMM_WORLD);  
-    
-    time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now(); 
-
+    timepoint_e = high_resolution_clock::now();
+    long duration = duration_cast<microseconds>(timepoint_e - timepoint_s).count();
     if (rank == 0)
     {
-
         //Remplir la matrix avec les valeurs recues des autres threads
-        for(int i = rowsProc + 1; i < rows; i++) {
-            for(int j = 0; j < cols; j++) {
-                    matrix[i][j] = bufferReceive[j + cols * i - cols];
-            }
+        for (int i = 0; i < rows - rowsRoot; i++){
+            memcpy(matrix[rowsRoot + i], bufferReceive + cols * (rowsProc + i), cols * sizeof(double));
         }
 
         cout << "-----  PARALLEL  -----" << endl << flush;
         printMatrix(rows, cols, matrix);
 
-
     }
+ 
 
-    
-    return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
+  
+
+    // // deallocateMatrix(rows, matrix);
+    // deallocateMatrix(rows, matrixLoc);
+    // delete[](bufferReceive);
+    // delete[](bufferSend);
+
+    return duration;
 }
 
 
