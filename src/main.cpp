@@ -257,7 +257,7 @@ void distributeRows(int procCount, int rows, int cols, int * threadRows, int * d
             threadRows[i] = rowsPerProc;
         }
 
-        // // Fill displacements
+        // Fill displacements
         displacements[i] = offset;
         offset += threadRows[i];
     }
