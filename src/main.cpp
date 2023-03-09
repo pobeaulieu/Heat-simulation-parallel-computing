@@ -33,7 +33,16 @@ using std::setw;
 using std::stod;
 using std::stoi;
 
+#include <iostream>
+#include <vector>
+#include <cmath>
+
+
+void distributeNumber(int num, int numThreads, std::vector<int>& threadVals, int minVal, int maxVal, int numMin, int numMax);
+void testDistribution();
+
 int main(int argc, char* argv[]) {
+    // testDistribution();
     // Arguments.
     int rows;
     int cols;
@@ -188,7 +197,6 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
     timepoint_s = high_resolution_clock::now();
 
     if (rank == 0){
-
         solvePar(rowsRoot, cols, iters, td, h, sleep, matrix, rank, procCount - 1);
     }
     else{
@@ -232,9 +240,6 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
 
     }
  
-
-  
-
     // // deallocateMatrix(rows, matrix);
     // deallocateMatrix(rows, matrixLoc);
     // delete[](bufferReceive);
@@ -242,6 +247,59 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
 
     return duration;
 }
+
+void distributeNumber(int num, int numThreads, std::vector<int>& threadVals, int minVal, int maxVal, int numMin, int numMax) {
+    for (int i = 0; i < numThreads; i++) {
+        if (i < numMin) {
+            threadVals[i] = minVal;
+        } else {
+            threadVals[i] = maxVal;
+        }
+    }
+}
+
+void testDistribution(){
+        // Example 1: 1000 to divide among 64 threads (15 and 16)
+    int num1 = 1000;
+    int numThreads1 = 64;
+    int minVal1 = 15;
+    int maxVal1 = 16;
+    int numMin1 = numThreads1 - (num1 % numThreads1);
+    int numMax1 = numThreads1 - numMin1;
+    
+    std::vector<int> threadVals1(numThreads1);
+    distributeNumber(num1, numThreads1, threadVals1, minVal1, maxVal1, numMin1, numMax1);
+    
+    std::cout << "Example 1: 1000 to divide among 64 threads (15 and 16)\n";
+    int count = 0;
+    for (int i = 0; i < numThreads1; i++) {
+        count += threadVals1[i];
+        std::cout << "Thread " << i << ": " << threadVals1[i] << std::endl;
+    }
+    
+    std::cout << count << "\n";
+    
+    // Example 2: 420 to divide among 48 threads (8 and 9)
+    int num2 = 420;
+    int numThreads2 = 48;
+    int minVal2 = 8;
+    int maxVal2 = 9;
+    int numMin2 = numThreads2 - (num2 % numThreads2);
+    int numMax2 = numThreads2 - numMin2;
+    
+    std::vector<int> threadVals2(numThreads2);
+    distributeNumber(num2, numThreads2, threadVals2, minVal2, maxVal2, numMin2, numMax2);
+    int count2 = 0;
+    std::cout << "Example 2: 420 to divide among 48 threads (8 and 9)\n";
+    for (int i = 0; i < numThreads2; i++) {
+        count2 += threadVals2[i];
+        std::cout << "Thread " << i << ": " << threadVals2[i] << std::endl;
+    }
+
+    std::cout << count2 << "\n";
+}
+
+
 
 
 
