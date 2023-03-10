@@ -80,18 +80,16 @@ void solvePar(int rows, int cols, int iterations, double td, double h, int sleep
         memcpy(lastLine, matrix[rows-1], cols * sizeof(double));
 
         // Send buffers to other threads as soon as possible
-        if (rank != lastRank)
-        {
+        if (rank != lastRank){
             MPI_Request request;
             MPI_Isend(lastLine, cols, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD, &request);
         }
-        if (rank != 0)
-        {
+        if (rank != 0){
             MPI_Request request;
             MPI_Isend(firstLine, cols, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, &request);
         }
     
-        // ComputeMiddle in each case, independently of other threads
+        // Compute middle in each case, independently of other threads
         memcpy(linePrevBuffer, firstLine, cols * sizeof(double));
         for(int i = 1; i < rows - 1; i++) {
             memcpy(lineCurrBuffer, matrix[i], cols * sizeof(double));
@@ -109,8 +107,7 @@ void solvePar(int rows, int cols, int iterations, double td, double h, int sleep
 
         // Compute edge lines
         // Edge case 1 - Last line - Receive the next line if there is a neighbor at rank + 1
-        if (rank != lastRank)
-        {
+        if (rank != lastRank){
             MPI_Recv(nextBufferReceive, cols, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             for(int j = 1; j < cols - 1; j++) {
                 c = lastLine[j];
@@ -122,9 +119,8 @@ void solvePar(int rows, int cols, int iterations, double td, double h, int sleep
                 matrix[rows-1][j] = c * (1.0 - 4.0 * td / h_square) + (t + b + l + r) * (td / h_square);
             }
         }
-        // Edge case 2 - First line -  Receive the previous line if there is a neighbor at rank - 1
-        if (rank != 0)
-        {
+        // Edge case 2 - First line - Receive the previous line if there is a neighbor at rank - 1
+        if (rank != 0){
             MPI_Recv(previousBufferReceive, cols, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             for(int j = 1; j < cols - 1; j++) {
                 c = firstLine[j];
@@ -149,11 +145,11 @@ void solvePar(int rows, int cols, int iterations, double td, double h, int sleep
 }
 
 void printBuffer(int cols, double * buffer) {
-        for(int col = 0; col < cols; col++) {
-            cout << fixed << buffer[col] << " " << flush;
-        }
+    for(int col = 0; col < cols; col++) {
+        cout << fixed << buffer[col] << " " << flush;
+    }
 
-        cout << endl << flush;
+    cout << endl << flush;
 }
 
 

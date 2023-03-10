@@ -164,9 +164,7 @@ long sequential(int rows, int cols, int iters, double td, double h, int sleep)
 
 long parallel(int rows, int cols, int iters, double td, double h, int sleep, int rank, double ** matrix, int procCount)
 {
-
-    time_point<high_resolution_clock> timepoint_s, timepoint_e;
-    timepoint_s = high_resolution_clock::now();
+    time_point<high_resolution_clock> timepoint_s = high_resolution_clock::now();
 
     bool toTransposeBack = false;
 
@@ -207,14 +205,14 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
     for (int i = 0; i < procCount; i++){
         recvCount[i] = threadRows[i] * cols;
         disp[i] = displacements[i] * cols;
-
     }
 
     MPI_Gatherv(bufferSend, recvCount[rank], MPI_DOUBLE, bufferReceive, recvCount, disp, MPI_DOUBLE, 0, MPI_COMM_WORLD);  
 
-    if (rank == 0)
-    {
+    time_point<high_resolution_clock> timepoint_e = high_resolution_clock::now();
 
+    if (rank == 0){
+        // Fill final matrix
         for (int i = 0; i < rows; i++){
             memcpy(matrix[i], bufferReceive + i * cols, cols * sizeof(double));
         }
@@ -225,29 +223,23 @@ long parallel(int rows, int cols, int iters, double td, double h, int sleep, int
             rows = cols;
             cols = temp;  
         }
-
         cout << "-----  PARALLEL  -----" << endl << flush;
         printMatrix(rows, cols, matrix);
 
     }
-
-    timepoint_e = high_resolution_clock::now();
-    long duration = duration_cast<microseconds>(timepoint_e - timepoint_s).count();
 
     delete[](recvCount);
     delete[](disp);
     delete[](threadRows);
     delete[](displacements);
 
-
-    return duration;
+    return duration_cast<microseconds>(timepoint_e - timepoint_s).count();
 }
 
 
 void distributeRows(int procCount, int rows, int cols, int * threadRows, int * displacements){
     int rowsPerProc = rows / procCount;
     int remainingRows = rows % procCount;
-
     int offset = 0;
     for (int i = 0; i < procCount; i++) {
         // Fill threadRows
@@ -256,7 +248,6 @@ void distributeRows(int procCount, int rows, int cols, int * threadRows, int * d
         } else {
             threadRows[i] = rowsPerProc;
         }
-
         // Fill displacements
         displacements[i] = offset;
         offset += threadRows[i];
