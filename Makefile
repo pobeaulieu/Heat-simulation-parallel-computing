@@ -1,7 +1,6 @@
 CC = mpic++
 CFLAGS = -Wall -fPIC -m64 -O3 -std=c++14
-LFLAGS = -Wall -fPIC -m64
-
+LFLAGS = -Wall -fPIC -m64 
 BUILD_DIR = build
 SRC_DIR = src
 
